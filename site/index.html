@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrainLeak: is your test score real?</title>
+<meta name="description" content="Find data leakage in your ML dataset or notebook, in your browser. Your files never leave your computer.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; worker-src 'self' blob:; base-uri 'none'; form-action 'none'">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230B1220'/><path d='M9 22l7-12 7 12z' fill='none' stroke='%2322D3EE' stroke-width='3'/></svg>">
+<style>
+  :root{--navy:#0B1220;--card:#131C2E;--line:#24324A;--ink:#E6EDF7;--muted:#9FB0C8;--cyan:#22D3EE;--red:#F87171;--amber:#FBBF24;--green:#34D399}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;background:var(--navy);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  a{color:var(--cyan)}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 20px 60px}
+  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .logo{font-weight:900;font-size:26px;letter-spacing:-.02em}.logo b{color:var(--cyan)}
+  .tag{margin-left:auto;color:var(--muted);font-size:14px}
+  h1{font-size:clamp(30px,5vw,48px);line-height:1.05;margin:26px 0 10px;letter-spacing:-.02em}
+  h1 span{color:var(--cyan)}
+  .lead{color:var(--muted);font-size:18px;max-width:720px;margin:0 0 18px}
+  .privacy{display:inline-flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:14px;color:var(--ink)}
+  .privacy i{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:22px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .tabs button{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font:600 15px system-ui;cursor:pointer}
+  .tabs button[aria-selected=true]{background:var(--cyan);border-color:var(--cyan);color:var(--navy)}
+  .drops{display:grid;gap:12px;grid-template-columns:1fr}
+  .drops.two{grid-template-columns:1fr 1fr}
+  @media(max-width:640px){.drops.two{grid-template-columns:1fr}}
+  .drop{border:2px dashed var(--line);border-radius:14px;padding:22px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;position:relative}
+  .drop:hover,.drop:focus-within,.drop.over{border-color:var(--cyan);background:#0F1829}
+  .drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .drop strong{display:block;font-size:17px}.drop small{color:var(--muted)}
+  .drop.has{border-style:solid;border-color:var(--green)}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px}
+  label{color:var(--muted);font-size:14px}
+  select{background:var(--navy);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:15px system-ui;min-width:200px}
+  .go{background:var(--cyan);color:var(--navy);border:0;border-radius:10px;padding:12px 22px;font:800 16px system-ui;cursor:pointer}
+  .go:disabled{opacity:.45;cursor:not-allowed}
+  .ghost{background:transparent;color:var(--cyan);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font:600 14px system-ui;cursor:pointer}
+  .ghost:hover{border-color:var(--cyan)}
+  #status{color:var(--muted);font-size:14px;min-height:22px;margin-top:12px}
+  #status.err{color:var(--red)}
+  .bar{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:8px}
+  .bar i{display:block;height:100%;width:0;background:var(--cyan);transition:width .4s}
+  #result{margin-top:22px}
+  .examples{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+  @media(max-width:760px){.grid3{grid-template-columns:1fr}}
+  .grid3 div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .grid3 b{display:block;margin-bottom:4px}.grid3 p{margin:0;color:var(--muted);font-size:14px}
+  code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  pre.cmd{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;margin:8px 0}
+  footer{margin-top:40px;color:var(--muted);font-size:14px;border-top:1px solid var(--line);padding-top:16px}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">Train<b>Leak</b></div>
+    <div class="tag">by CS Funda · open source (MIT)</div>
+  </header>
+
+  <h1>Is your test score <span>real?</span></h1>
+  <p class="lead">Drop your dataset or notebook. TrainLeak finds the data-leakage mistakes that make ML results too good to be true, and shows the exact code to fix them.</p>
+  <div class="privacy"><i></i>Runs in your browser. Your files are never uploaded.</div>
+
+  <section class="panel" aria-label="Check your work">
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-mode="split" id="tab-split">Train + test files</button>
+      <button role="tab" aria-selected="false" data-mode="one" id="tab-one">One dataset</button>
+      <button role="tab" aria-selected="false" data-mode="code" id="tab-code">Notebook / script</button>
+    </div>
+
+    <div id="drops" class="drops two">
+      <div class="drop" id="d1"><input type="file" id="f1" aria-label="Training file"><strong id="t1">Training file</strong><small id="s1">CSV, TSV, Parquet or JSON</small></div>
+      <div class="drop" id="d2"><input type="file" id="f2" aria-label="Test file"><strong id="t2">Test file</strong><small id="s2">CSV, TSV, Parquet or JSON</small></div>
+    </div>
+
+    <div class="row" id="opts">
+      <label for="target">Target column</label>
+      <select id="target" disabled><option value="">guess automatically</option></select>
+    </div>
+
+    <div class="row">
+      <button class="go" id="run" disabled>Check for leaks</button>
+      <span class="sr" aria-live="polite" id="live"></span>
+    </div>
+    <div id="status">Loading Python in your browser…</div>
+    <div class="bar" aria-hidden="true" id="barwrap"><i id="bar"></i></div>
+
+    <div class="examples">
+      <span style="color:var(--muted);font-size:14px;align-self:center">No data at hand? Try:</span>
+      <button class="ghost" id="ex-demo">Leaky scam-SMS split</button>
+      <button class="ghost" id="ex-nb">Notebook with SMOTE before the split</button>
+      <button class="ghost" id="ex-fixed">The fixed notebook</button>
+    </div>
+  </section>
+
+  <section id="result" aria-live="polite"></section>
+  <div class="row" id="dl" hidden><button class="ghost" id="md">Download report (.md)</button><button class="ghost" id="js">Download JSON</button></div>
+
+  <div class="grid3">
+    <div><b>Why</b><p>A model that scores 99% because the test set was already in training. Reviewers reject it; real users never get that score.</p></div>
+    <div><b>What it checks</b><p>Copies and same-template rows across train/test, repeated texts, a column that gives the answer away, SMOTE or scaling before the split.</p></div>
+    <div><b>Every finding</b><p>What it found with real numbers, why it matters, and code you can paste to fix it.</p></div>
+  </div>
+
+  <section class="panel">
+    <b>Use it in your notebook or terminal</b>
+    <pre class="cmd">pip install git+https://github.com/reazulzishan/TrainLeak
+import trainleak
+trainleak.check(train_df, test_df, target="label")
+trainleak.check_code("my_notebook.ipynb")</pre>
+    <a href="https://colab.research.google.com/github/reazulzishan/TrainLeak/blob/main/examples/quickstart.ipynb">Open the Colab quickstart</a> ·
+    <a href="https://github.com/reazulzishan/TrainLeak">GitHub</a>
+  </section>
+
+  <footer>A clean result means these checks found nothing. It is not a proof that no leak exists. ·
+    <a href="https://github.com/reazulzishan/TrainLeak/blob/main/SECURITY.md">Privacy &amp; security</a> ·
+    <a href="https://github.com/reazulzishan/TrainLeak/issues">Report a false alarm</a></footer>
+</div>
+<script src="https://cdn.jsdelivr.net/pyodide/v314.0.8/full/pyodide.js" integrity="sha384-0Tw0jFeRF+UzB1HbzjzDi5ZNMyMclQPHmYkEquv9V+lAj/rZBHxu1c35Uq28kDPo" crossorigin="anonymous"></script>
+<script src="app.js"></script>
+</body>
+</html>

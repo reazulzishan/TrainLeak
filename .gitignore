@@ -9,3 +9,5 @@ coverage.xml
 htmlcov/
 # internal notes, not published
 research/
+_site/
+docs/e2e/

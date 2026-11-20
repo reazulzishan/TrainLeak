@@ -37,7 +37,16 @@ def _frame(x, name):
                 f"{p.name} is larger than 2 GB. Load a sample in Python and pass the DataFrame: trainleak.check(df.sample(500_000))"
             )
         if s == ".parquet":
-            return pd.read_parquet(p)
+            try:
+                return pd.read_parquet(p)
+            except ImportError:
+                raise
+            except (
+                Exception
+            ):  # pandas 3.0 + pyarrow 22 in Pyodide fail inside pandas' arrow patch; pyarrow itself reads fine
+                import pyarrow.parquet as pq
+
+                return pq.read_table(p).to_pandas()
         if s in (".xlsx", ".xls"):
             try:
                 import defusedxml  # noqa: F401  (openpyxl uses it, when installed, to block XML attacks in .xlsx files)
