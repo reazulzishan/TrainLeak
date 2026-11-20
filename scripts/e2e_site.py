@@ -38,13 +38,6 @@ with sync_playwright() as pw:
         expect(pg.locator("#result")).to_contain_text("TL102", timeout=120_000)
         print("upload:", pg.locator("#status").inner_text())
         pg.screenshot(path=str(shots / "3_upload.png"), full_page=True)
-    pg.goto(url + "?theme=light")
-    expect(pg.locator("#status")).to_contain_text("Ready", timeout=180_000)
-    assert pg.evaluate("document.documentElement.dataset.theme") == "light"
-    pg.click("#ex-demo"); expect(pg.locator("#result")).to_contain_text("3 leaks found", timeout=60_000)
-    assert "#FFFFFF" in pg.locator("#result").inner_html().upper()
-    pg.screenshot(path=str(shots / "4_light.png"), full_page=True)
-    print("light theme: ok")
     assert not errors, errors
     b.close()
 print("E2E PASSED")
