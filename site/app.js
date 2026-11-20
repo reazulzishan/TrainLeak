@@ -29,14 +29,14 @@ await micropip.install(${JSON.stringify(new URL(wheel, location.href).href)}, de
 import json, trainleak
 from trainleak.data import _frame
 
-def _run(kind, a=None, b=None, target=None):
+def _run(kind, a=None, b=None, target=None, theme="dark"):
     if kind == "demo":
         r = trainleak.demo()
     elif kind == "code":
         r = trainleak.check_code(a)
     else:
         r = trainleak.check(a, b, target=target or None)
-    return json.dumps({"html": r._repr_html_(), "md": r.markdown(), "json": r.json(), "ok": r.ok, "verdict": r.verdict})
+    return json.dumps({"html": r.html(theme), "md": r.markdown(), "json": r.json(), "ok": r.ok, "verdict": r.verdict})
 
 def _columns(path):
     return json.dumps([str(c) for c in _frame(path, "x").columns])
@@ -126,7 +126,7 @@ async function run(kind, a, b, name) {
   await new Promise((r) => setTimeout(r, 30)); // let the status paint
   try {
     const t = performance.now();
-    const out = JSON.parse(py.globals.get("_run")(kind, a ?? null, b ?? null, $("target").value || null));
+    const out = JSON.parse(py.globals.get("_run")(kind, a ?? null, b ?? null, $("target").value || null, document.documentElement.dataset.theme));
     $("result").innerHTML = out.html; // built and escaped by trainleak.Report._repr_html_
     last = { md: out.md, json: out.json, name };
     $("dl").hidden = false;

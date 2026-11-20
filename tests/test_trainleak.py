@@ -435,3 +435,12 @@ def test_flags_and_counts_are_not_entities():
     )
     hints = [f.title for f in trainleak.check(df, target="price").findings if f.code == "TL304"]
     assert hints == ["Many rows share the same 'host_id'"], hints
+
+
+def test_light_theme_card():
+    df = pd.DataFrame({"t": ["<b>same long review text here</b>"] * 2, "label": [0, 1]})
+    r = trainleak.check(df.iloc[:1], df.iloc[1:], text=["t"], near=False)
+    light = r.html("light")
+    assert "background:#FFFFFF" in light
+    assert "<b>same" not in light
+    assert r._repr_html_() == r.html("dark")

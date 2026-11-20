@@ -176,45 +176,76 @@ class Report:
             default=str,
         )
 
-    def _repr_html_(self):
-        """Card with its own navy background, so it reads the same in light and dark notebook themes.
-        WCAG contrast on #0B1220 / #131C2E: text 15.9/14.5, cyan 10.4/9.4, red 6.8/6.2, amber 11.2/10.2, muted 8.5/7.7, green 9.7/8.9 (all ≥ 4.5 AA)."""
+    THEMES = {  # noqa: RUF012
+        # WCAG contrast, dark on #0B1220/#131C2E: text 15.9/14.5, cyan 10.4/9.4, red 6.8/6.2, amber 11.2/10.2, muted 8.5/7.7, green 9.7/8.9
+        "dark": {
+            "bg": "#0B1220",
+            "card": "#131C2E",
+            "code": "#0B1220",
+            "ink": "#E6EDF7",
+            "muted": "#9FB0C8",
+            "leak": "#F87171",
+            "risk": "#FBBF24",
+            "info": "#22D3EE",
+            "ok": "#34D399",
+        },
+        # light on #FFFFFF/#F1F5F9: ink 17.9/16.3, muted 7.6/6.9, cyan 5.4/4.9, red 6.5/5.9, amber 5.0/4.6, green 5.0/4.6 (all >= 4.5 AA)
+        "light": {
+            "bg": "#FFFFFF",
+            "card": "#F1F5F9",
+            "code": "#FFFFFF",
+            "ink": "#0F172A",
+            "muted": "#475569",
+            "leak": "#B91C1C",
+            "risk": "#B45309",
+            "info": "#0E7490",
+            "ok": "#15803D",
+        },
+    }
+
+    def html(self, theme: str = "dark") -> str:
+        """The report as one self-contained HTML card. theme: "dark" (default, reads the same in light and dark notebooks) or "light"."""
         from html import escape
 
-        col = {"leak": "#F87171", "risk": "#FBBF24", "info": "#22D3EE"}
-        head = "#F87171" if not self.ok else ("#FBBF24" if any(f.level == "risk" for f in self.findings) else "#34D399")
+        p = self.THEMES[theme]
+        head = p["leak"] if not self.ok else (p["risk"] if any(f.level == "risk" for f in self.findings) else p["ok"])
 
         def item(f):
             ex = "".join(
-                f"<div style='color:#9FB0C8;font-family:ui-monospace,monospace;font-size:12px'>{escape(str(e)[:200])}</div>"
+                f"<div style='color:{p['muted']};font-family:ui-monospace,monospace;font-size:12px'>{escape(str(e)[:200])}</div>"
                 for e in f.examples[:3]
             )
             return (
-                f'<div style="border-left:4px solid {col[f.level]};padding:8px 12px;margin:10px 0;background:#131C2E;border-radius:6px">'
-                f'<div><span style="color:{col[f.level]};font-weight:700">{ICON[f.level]} {f.level.upper()}</span> '
-                f'<span style="color:#9FB0C8;font-family:ui-monospace,monospace">{f.code}</span> <b>{escape(f.title)}</b></div>'
+                f'<div style="border-left:4px solid {p[f.level]};padding:8px 12px;margin:10px 0;background:{p["card"]};border-radius:6px">'
+                f'<div><span style="color:{p[f.level]};font-weight:700">{ICON[f.level]} {f.level.upper()}</span> '
+                f'<span style="color:{p["muted"]};font-family:ui-monospace,monospace">{f.code}</span> <b>{escape(f.title)}</b></div>'
                 f'<div style="margin-top:4px"><b>What:</b> {escape(f.what)}</div><div><b>Why:</b> {escape(f.why)}</div>'
-                f'<div><b>Fix:</b></div><pre style="margin:4px 0;padding:8px;background:#0B1220;color:#E6EDF7;border-radius:4px;white-space:pre-wrap">{escape(f.fix)}</pre>{ex}</div>'
+                f'<div><b>Fix:</b></div><pre style="margin:4px 0;padding:8px;background:{p["code"]};color:{p["ink"]};border-radius:4px;'
+                f'white-space:pre-wrap;border:1px solid {p["card"]}">{escape(f.fix)}</pre>{ex}</div>'
             )
 
-        notes = "".join(f"<div style='color:#9FB0C8;font-size:12px'>Assumed: {escape(n)}</div>" for n in self.notes)
+        notes = "".join(
+            f"<div style='color:{p['muted']};font-size:12px'>Assumed: {escape(n)}</div>" for n in self.notes
+        )
         checks = (
-            (
-                f"<div style='color:#9FB0C8;font-size:12px;margin-top:6px'>Checked: {escape('; '.join(self.checks))}. "
-                "A clean result means these checks found nothing, not that no leak exists.</div>"
-            )
+            f"<div style='color:{p['muted']};font-size:12px;margin-top:6px'>Checked: {escape('; '.join(self.checks))}. "
+            "A clean result means these checks found nothing, not that no leak exists.</div>"
             if self.checks
             else ""
         )
         return (
-            f'<div style="font-family:system-ui,sans-serif;background:#0B1220;color:#E6EDF7;padding:14px 16px;border-radius:10px;line-height:1.45">'
-            f'<div style="font-weight:800">TrainLeak<span style="color:#9FB0C8;font-weight:400">{(" · " + escape(self.source)) if self.source else ""}</span></div>'
+            f'<div style="font-family:system-ui,sans-serif;background:{p["bg"]};color:{p["ink"]};padding:14px 16px;border-radius:10px;line-height:1.45">'
+            f'<div style="font-weight:800">TrainLeak<span style="color:{p["muted"]};font-weight:400">{(" · " + escape(self.source)) if self.source else ""}</span></div>'
             f'<div style="color:{head};font-weight:700;margin:4px 0 6px">{escape(self.verdict)}</div>'
             + "".join(item(f) for f in self.sorted())
             + notes
             + checks
             + "</div>"
         )
+
+    def _repr_html_(self):
+        """Jupyter/Colab display: the dark card has its own background, so it reads the same in light and dark notebook themes."""
+        return self.html("dark")
 
     def __repr__(self):
         return self.text(color=False)
