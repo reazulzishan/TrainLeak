@@ -421,3 +421,17 @@ def test_unicode_forms_match():
     composed, decomposed = "আমার নাম \u09df", "আমার নাম \u09af\u09bc"  # য় written two ways
     a, b = _norm_text(pd.Series([composed, decomposed])).tolist()
     assert a == b
+
+
+def test_flags_and_counts_are_not_entities():
+    n = 400
+    df = pd.DataFrame(
+        {
+            "host_id": rng.integers(0, 60, n),
+            "superhost": rng.integers(0, 2, n),
+            "calculated_host_listings_count": rng.integers(1, 80, n),
+            "price": rng.normal(100, 20, n),
+        }
+    )
+    hints = [f.title for f in trainleak.check(df, target="price").findings if f.code == "TL304"]
+    assert hints == ["Many rows share the same 'host_id'"], hints

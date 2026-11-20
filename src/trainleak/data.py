@@ -266,18 +266,18 @@ def _shared_ids(train, test, cols, f, what):
 
 
 def _entities(df, target, skip):
+    """Columns naming an entity (user, product, patient…) with many rows each. Flags and counts are not entities."""
     out = []
     for c in df.columns:
         name = str(c).lower()
-        if (
-            c == target
-            or c in skip
-            or not re.search(ENTITY, name)
-            or re.search(r"categor|type|kind|class|status|level|segment", name)
-        ):
+        if c == target or c in skip or not re.search(ENTITY, name):
+            continue
+        if re.search(r"categor|type|kind|class|status|level|segment|count|is_|^has_|super", name):
+            continue
+        if pd.api.types.is_numeric_dtype(df[c]) and not re.search(r"(^|_)(id|code|no|number)$", name):
             continue
         u = df[c].nunique()
-        if 1 < u < 0.9 * len(df):
+        if 20 <= u < 0.9 * len(df):
             out.append(c)
     return out
 
