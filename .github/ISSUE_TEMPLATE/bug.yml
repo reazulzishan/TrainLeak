@@ -1,0 +1,22 @@
+name: Bug or false alarm
+description: TrainLeak missed a leak, flagged something that isn't one, or crashed
+labels: [bug]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What happened?
+      options: [False alarm (flagged a non-leak), Missed a leak, Crash or error, Other]
+    validations: {required: true}
+  - type: textarea
+    id: repro
+    attributes:
+      label: Small example
+      description: A few rows of data or the notebook cell(s), with private data removed. Plus the command or call you ran.
+    validations: {required: true}
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Output of `trainleak --version` and `python -c "import pandas, sklearn; print(pandas.__version__, sklearn.__version__)"`
+    validations: {required: true}

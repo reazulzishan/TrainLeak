@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If TrainLeak helped your thesis or paper, please cite it."
+title: "TrainLeak: finding data leakage in machine-learning datasets and notebooks"
+authors:
+  - family-names: Zishan
+    given-names: Reazul Akter
+version: 0.1.0
+license: MIT
+repository-code: "https://github.com/reazulzishan/TrainLeak"
+keywords: [machine learning, data leakage, reproducibility, train-test split, SMOTE]

@@ -1,0 +1,11 @@
+# Use TrainLeak as a pre-commit hook in your own repo:
+#   - repo: https://github.com/reazulzishan/TrainLeak
+#     rev: v0.1.0
+#     hooks: [{id: trainleak-notebooks}]
+- id: trainleak-notebooks
+  name: TrainLeak (notebook leakage patterns)
+  description: Flags SMOTE/scaling before the train/test split and fitting on test data.
+  entry: trainleak
+  language: python
+  files: \.(ipynb|py)$
+  args: [--quiet]
